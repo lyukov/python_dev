@@ -1,4 +1,8 @@
 import tkinter as tk
+import random
+
+def immutableShuffle(x):
+    return random.sample(x, len(x))
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -15,7 +19,8 @@ class Application(tk.Frame):
         self.newGame()
 
     def newGame(self):
-        pass
+        for i, tile in enumerate(immutableShuffle(self.tiles)):
+            tile.grid(row = i // 4 + 1, column = i % 4)
 
     def step(self):
         pass
