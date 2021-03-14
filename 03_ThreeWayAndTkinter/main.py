@@ -3,6 +3,7 @@ import tkinter.messagebox
 import random
 
 EMPTY = -1
+N = 4
 
 def immutableShuffle(x):
     return random.sample(x, len(x))
@@ -19,17 +20,18 @@ class Tile(tk.Button):
         self.position = (-1, -1)
         self.gameGrid = gameGrid
         self.winState = winState
+        self.app = master
 
     def setPosition(self, position):
-        row, col = position // 4, position % 4
+        row, col = position // N, position % N
         self.grid(row=row+1, column=col, sticky='NEWS')
         self.position = position
         self.gameGrid[position] = self.number
 
     def makeStep(self):
-        for direction in [-4, 4, -1, 1]:
+        for direction in [-N, N, -1, 1]:
             newPosition = self.position + direction
-            if 0 <= newPosition < 16 and self.gameGrid[newPosition] == EMPTY:
+            if 0 <= newPosition < N*N and self.gameGrid[newPosition] == EMPTY:
                 self.gameGrid[self.position] = EMPTY
                 self.setPosition(newPosition)
                 self.checkWin()
@@ -38,33 +40,34 @@ class Tile(tk.Button):
     def checkWin(self):
         if self.gameGrid == self.winState:
             tkinter.messagebox.showinfo('', 'Congratulations! You win!')
+            self.app.newGame()
 
 class Application(tk.Frame):
 
     def __init__(self, master=None):
         super().__init__(master)
         self.grid(sticky='NEWS')
-        self.gameGrid = [EMPTY for i in range(16)]
-        self.winState = list(range(1, 16)) + [EMPTY]
+        self.gameGrid = [EMPTY for i in range(N * N)]
+        self.winState = list(range(1, N * N)) + [EMPTY]
         self.createWidgets()
         self.flexibleItems()
 
     def createWidgets(self):
         self.newButton = tk.Button(self, text='New', command=self.newGame)
         self.exitButton = tk.Button(self, text='Exit', command=self.quit)
-        self.tileNums = list(range(1, 16))
+        self.tileNums = list(range(1, N * N))
         self.tiles = [Tile(self, i, self.gameGrid, self.winState) for i in self.tileNums]
-        self.newButton.grid(row=0, column=0, columnspan=2, sticky='NEWS')
-        self.exitButton.grid(row=0, column=2, columnspan=2, sticky='NEWS')
+        self.newButton.grid(row=0, column=0, columnspan=N // 2, sticky='NEWS')
+        self.exitButton.grid(row=0, column=N // 2, columnspan=N - N // 2, sticky='NEWS')
         self.newGame()
 
     def flexibleItems(self):
         top=self.winfo_toplevel()
         top.rowconfigure(0, weight=1)
         top.columnconfigure(0, weight=1)
-        for row in range(5):
+        for row in range(N + 1):
             self.rowconfigure(row, weight=1)
-        for col in range(4):
+        for col in range(N):
             self.columnconfigure(col, weight=1)
 
     def newGame(self):
@@ -75,5 +78,5 @@ class Application(tk.Frame):
 
 if __name__=='__main__':
     app = Application()
-    app.master.title('15')
+    app.master.title(str(N * N - 1))
     app.mainloop()
