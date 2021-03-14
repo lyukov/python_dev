@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.messagebox
 import random
 
 EMPTY = -1
@@ -7,11 +8,17 @@ def immutableShuffle(x):
     return random.sample(x, len(x))
 
 class Tile(tk.Button):
-    def __init__(self, master, number, gameGrid):
-        super().__init__(master, text=str(number), command=self.makeStep)
+    def __init__(self, master, number, gameGrid, winState):
+        super().__init__(
+            master,
+            text=str(number),
+            command=self.makeStep,
+            width=2
+        )
         self.number = number
         self.position = (-1, -1)
         self.gameGrid = gameGrid
+        self.winState = winState
 
     def setPosition(self, position):
         row, col = position // 4, position % 4
@@ -25,7 +32,12 @@ class Tile(tk.Button):
             if 0 <= newPosition < 16 and self.gameGrid[newPosition] == EMPTY:
                 self.gameGrid[self.position] = EMPTY
                 self.setPosition(newPosition)
+                self.checkWin()
                 return
+
+    def checkWin(self):
+        if self.gameGrid == self.winState:
+            tkinter.messagebox.showinfo('', 'Congratulations! You win!')
 
 class Application(tk.Frame):
 
@@ -33,6 +45,7 @@ class Application(tk.Frame):
         super().__init__(master)
         self.grid(sticky='NEWS')
         self.gameGrid = [EMPTY for i in range(16)]
+        self.winState = list(range(1, 16)) + [EMPTY]
         self.createWidgets()
         self.flexibleItems()
 
@@ -40,7 +53,7 @@ class Application(tk.Frame):
         self.newButton = tk.Button(self, text='New', command=self.newGame)
         self.exitButton = tk.Button(self, text='Exit', command=self.quit)
         self.tileNums = list(range(1, 16))
-        self.tiles = [Tile(self, i, self.gameGrid) for i in self.tileNums]
+        self.tiles = [Tile(self, i, self.gameGrid, self.winState) for i in self.tileNums]
         self.newButton.grid(row=0, column=0, columnspan=2, sticky='NEWS')
         self.exitButton.grid(row=0, column=2, columnspan=2, sticky='NEWS')
         self.newGame()
@@ -58,8 +71,9 @@ class Application(tk.Frame):
         shuffledNums = immutableShuffle(self.tileNums)
         for i, num in enumerate(shuffledNums):
             self.tiles[num - 1].setPosition(i)
+        self.gameGrid[-1] = EMPTY
 
-
-app = Application()
-app.master.title('15')
-app.mainloop()
+if __name__=='__main__':
+    app = Application()
+    app.master.title('15')
+    app.mainloop()
