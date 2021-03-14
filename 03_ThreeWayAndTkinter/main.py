@@ -71,10 +71,22 @@ class Application(tk.Frame):
             self.columnconfigure(col, weight=1)
 
     def newGame(self):
-        shuffledNums = immutableShuffle(self.tileNums)
-        for i, num in enumerate(shuffledNums):
-            self.tiles[num - 1].setPosition(i)
-        self.gameGrid[-1] = EMPTY
+        while True:
+            shuffledNums = immutableShuffle(self.tileNums)
+            for i, num in enumerate(shuffledNums):
+                self.tiles[num - 1].setPosition(i)
+            self.gameGrid[-1] = EMPTY
+            if self.isSolvable(): break
+
+    def isSolvable(self):
+        inv = 0
+        for i in range(N * N - 1):
+            for j in range(i):
+                if self.gameGrid[j] > self.gameGrid[i]:
+                    inv += 1
+        result = inv % 2 == 0
+        print(f"{inv=}, isSolvable={result}")
+        return result
 
 if __name__=='__main__':
     app = Application()
