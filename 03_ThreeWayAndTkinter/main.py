@@ -9,9 +9,9 @@ def immutableShuffle(x):
     return random.sample(x, len(x))
 
 class Tile(tk.Button):
-    def __init__(self, master, number, gameGrid, winState):
+    def __init__(self, parent, number, gameGrid, winState):
         super().__init__(
-            master,
+            parent,
             text=str(number),
             command=self.makeStep,
             width=2
@@ -20,7 +20,7 @@ class Tile(tk.Button):
         self.position = (-1, -1)
         self.gameGrid = gameGrid
         self.winState = winState
-        self.app = master
+        self.app = parent
 
     def setPosition(self, position):
         row, col = position // N, position % N
