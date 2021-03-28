@@ -11,7 +11,7 @@ object_description = re.compile(
     r"(?P<x1>[\d\.]+) "
     r"(?P<y1>[\d\.]+)"
     r"\> "
-    r"(?P<thickness>[\d\.]+) "
+    r"(?P<width>[\d\.]+) "
     r"(?P<outline>#?\w+)"
     r"(?P<fill>#?\w+)"
 )
@@ -82,16 +82,33 @@ class GraphicalEditor(AutoFrame):
 
     def onRelease(self, event):
         self.state = EditorState.FREE
+        self.updateText()
+
+    def dumpObject(self, object):
+        obj_type       = self.canvas.type(object)
+        x0, y0, x1, y1 = self.canvas.coords(object)
+        width          = self.canvas.itemcget(object, "width")
+        outline        = self.canvas.itemcget(object, "outline")
+        fill           = self.canvas.itemcget(object, "fill")
+        return f"{obj_type} <{x0} {y0} {x1} {y1}> {width} {outline} {fill}"
+
+    def updateText(self):
+        description = "\n".join(map(self.dumpObject, self.canvas.find_all()))
+        self.textEditor.text.delete("1.0", tk.END)
+        self.textEditor.text.insert("1.0", description)
 
 
 class TextEditor(AutoFrame):
     def create_widgets(self):
         self.text = tk.Text(self, undo=True)
-        self.text.bind("<<Modified>>", print)
+        self.text.bind("<<Modified>>", self.onModify)
         self.text.grid(sticky="NEWS")
 
     def setGraphicalEditor(self, graph):
         self.graphicalEditor = graph
+
+    def onModify(self, event):
+        print(event)
 
 
 class Window(AutoFrame):
