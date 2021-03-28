@@ -4,7 +4,7 @@ from enum import Enum
 
 
 object_description = re.compile(
-    r"(?P<type>oval) "
+    r"^oval "
     r"\<"
     r"(?P<x0>[\d\.]+) "
     r"(?P<y0>[\d\.]+) "
@@ -12,8 +12,8 @@ object_description = re.compile(
     r"(?P<y1>[\d\.]+)"
     r"\> "
     r"(?P<width>[\d\.]+) "
-    r"(?P<outline>#?\w+)"
-    r"(?P<fill>#?\w+)"
+    r"(?P<outline>#[0123456789ABCDEF]{6}) "
+    r"(?P<fill>#[0123456789ABCDEF]{6})$"
 )
 
 
@@ -108,7 +108,19 @@ class TextEditor(AutoFrame):
         self.graphicalEditor = graph
 
     def onModify(self, event):
-        print(event)
+        self.graphicalEditor.canvas.delete(tk.ALL)
+        lines = self.text.get("1.0", tk.END).split("\n")
+        for line in lines:
+            obj = object_description.match(line)
+            if not obj: continue
+            params = obj.groupdict()
+            self.graphicalEditor.canvas.create_oval(
+                params["x0"], params["y0"], params["x1"], params["y1"],
+                width=params["width"],
+                outline=params["outline"],
+                fill=params["fill"]
+            )
+        self.text.edit_modified(False)
 
 
 class Window(AutoFrame):
