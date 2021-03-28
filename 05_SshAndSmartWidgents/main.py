@@ -123,16 +123,21 @@ class TextEditor(AutoFrame):
         self.text = tk.Text(self, undo=True)
         self.text.bind("<<Modified>>", self.__onModify)
         self.text.grid(sticky="NEWS")
+        self.__WRONG_TAG = "wrong"
+        self.text.tag_config(self.__WRONG_TAG, background="red")
 
     def setGraphicalEditor(self, graph):
         self.graphicalEditor = graph
 
     def __onModify(self, event):
         self.graphicalEditor.canvas.delete(tk.ALL)
+        self.text.tag_remove(self.__WRONG_TAG, "1.0", tk.END)
         lines = self.text.get("1.0", tk.END).split("\n")
-        for line in lines:
+        for i, line in enumerate(lines):
             obj = object_description.match(line)
-            if not obj: continue
+            if not obj:
+                if line: self.text.tag_add(self.__WRONG_TAG, f"{i+1}.0", f"{i+1}.end")
+                continue
             params = obj.groupdict()
             self.graphicalEditor.canvas.create_oval(
                 params["x0"], params["y0"], params["x1"], params["y1"],
