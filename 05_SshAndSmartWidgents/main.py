@@ -1,5 +1,6 @@
 import tkinter as tk
 import re
+from enum import Enum
 
 
 object_description = re.compile(
@@ -11,9 +12,15 @@ object_description = re.compile(
     r"(?P<y1>[\d\.]+)"
     r"\> "
     r"(?P<thickness>[\d\.]+) "
-    r"(?P<edge_color>#?\w+)"
-    r"(?P<fill_color>#?\w+)"
+    r"(?P<outline>#?\w+)"
+    r"(?P<fill>#?\w+)"
 )
+
+
+class EditorState(Enum):
+    FREE = 1
+    NEW  = 2
+    EDIT = 3
 
 
 class AutoFrame(tk.Frame):
@@ -34,13 +41,47 @@ class AutoFrame(tk.Frame):
 class GraphicalEditor(AutoFrame):
     def create_widgets(self):
         self.canvas = tk.Canvas(self)
-        self.canvas.bind("<Button-1>", print)
-        self.canvas.bind("<ButtonRelease-1>", print)
-        self.canvas.bind("<Motion>", print)
+        self.canvas.bind("<Button-1>", self.onPress)
+        self.canvas.bind("<ButtonRelease-1>", self.onRelease)
+        self.canvas.bind("<Motion>", self.onMotion)
         self.canvas.grid(sticky="NEWS")
+        self.state = EditorState.FREE
+        self.object = None
+        self.coords = None
+        self.fill = "#000000"
+        self.outline = "#FFFFFF"
 
     def setTextEditor(self, text):
         self.textEditor = text
+
+    def onPress(self, event):
+        x, y = event.x, event.y
+        self.coords = x, y
+        overlapping = self.canvas.find_overlapping(x, y, x, y)
+        if overlapping:
+            self.state = EditorState.EDIT
+            self.object = overlapping[-1]
+        else:
+            self.state = EditorState.NEW
+            self.object = self.canvas.create_oval(
+                x, y, x, y,
+                fill=self.fill,
+                outline=self.outline
+            )
+
+    def onMotion(self, event):
+        if self.state == EditorState.FREE:
+            return
+        elif self.state == EditorState.NEW:
+            self.canvas.coords(self.object, *self.coords, event.x, event.y)
+        else:
+            x0, y0 = self.coords
+            x, y = event.x, event.y
+            self.canvas.move(self.object, x - x0, y - y0)
+            self.coords = x, y
+
+    def onRelease(self, event):
+        self.state = EditorState.FREE
 
 
 class TextEditor(AutoFrame):
